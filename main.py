@@ -171,8 +171,8 @@ load_notes()
 def delete_note():
     current_tab = notebook.index(notebook.select())
 
-    # Get the deleted note's title
-    note_title = notebook.tab(current_tab, "text").split(" - ")[0]
+    # Get the title of the note to be deleted
+    note_title = notebook.tab(current_tab, "text")
 
     # Confirmation
     confirm = messagebox.askyesno("Delete Note",
