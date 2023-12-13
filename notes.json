@@ -1,1 +1,1 @@
-{"Hello": "World", "rfi": {"content": "rf", "timer_duration": 60}}
+{"Hello": "World", "rfi": {"content": "rf", "timer_duration": 60}, "ngf": {"content": "ger", "reminder_time": "00:00:01"}}
