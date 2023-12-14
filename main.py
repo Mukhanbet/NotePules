@@ -3,8 +3,7 @@ from tkinter import ttk, messagebox
 import json
 from ttkbootstrap import Style
 from datetime import timedelta
-
-# Create the main window
+# This is the code of creation the main window
 root = tk.Tk()
 root.title("Notes App")
 root.geometry("600x500")
@@ -12,8 +11,11 @@ style = Style(theme='journal')
 style.configure("TNotebook.Tab", font=("TkDefaultFont", 14, "bold"))
 
 notebook = ttk.Notebook(root, style="TNotebook")
-
-#here we are saving the notes
+photo = tk.PhotoImage(file='emblem.png')
+root.iconphoto(False, photo)
+root.config(bg='#EFEFEF')
+root.resizable(False, False)
+# here we are saving the notes
 notes = {}
 try:
     with open("notes.json", "r") as f:
@@ -21,7 +23,7 @@ try:
 except FileNotFoundError:
     pass
 
-#creating notebook
+# creating notebook
 notebook = ttk.Notebook(root)
 notebook.pack(padx=10, pady=10, fill=tk.BOTH, expand=True)
 
@@ -53,7 +55,7 @@ def start_timer():
 
     def update_timer():
         nonlocal remaining_time
-        timer_label.config(text=f"Time remaining: {remaining_time}")
+        timer_label.config(text=f"{remaining_time}")
         remaining_time -= timedelta(seconds=1)
 
         if remaining_time >= timedelta(0):
@@ -119,34 +121,50 @@ def add_note():
         with open("notes.json", "w") as f:
             json.dump(notes, f)
 
-        # Adding the note to the notebook
-        note_content = tk.Text(notebook, width=40, height=10)
-        note_content.insert(tk.END, content)
-        notebook.forget(notebook.select())
-        notebook.add(note_content, text=f"{title} - Reminder Set")
+        # Check if the note is already in the notebook
+        note_index = None
+        for i in range(notebook.index(notebook.select())):
+            if notebook.tab(i, "text") == f"{title} - Reminder Set":
+                note_index = i
+                break
 
-        # Set the countdown timer for the note
-        remaining_time_note = reminder_time_note
+        # If the note is in the notebook, update its content
+        if note_index is not None:
+            note_content = notebook.nametowidget(notebook.select())
+            note_content.delete("1.0", tk.END)
+            note_content.insert(tk.END, content)
+            notebook.tab(note_index, text=f"{title} - Reminder Set")
+        else:
+            # If the note is not in the notebook, add it
+            note_content = tk.Text(notebook, width=40, height=10)
+            note_content.insert(tk.END, content)
+            notebook.add(note_content, text=f"{title}")
 
-        def update_timer_note():
-            nonlocal remaining_time_note
-            notebook.tab(notebook.select(), text=f"{title} - Time remaining: {remaining_time_note}")
-            remaining_time_note -= timedelta(seconds=1)
+            # Set the countdown timer for the note
+            remaining_time_note = reminder_time_note
 
-            if remaining_time_note >= timedelta(0):
-                root.after(1000, update_timer_note)
-            else:
-                notebook.tab(notebook.select(), text=f"{title} - Reminder!")
-                # Added messagebox reminder
-                messagebox.showinfo("Reminder", f"Time is up for \"{title}!\"")
+            def update_timer_note():
+                nonlocal remaining_time_note
+                notebook.tab(notebook.select(), text=f"{title} - {remaining_time_note}")
+                remaining_time_note -= timedelta(seconds=1)
 
-        update_timer_note()
+                if remaining_time_note >= timedelta(0):
+                    root.after(1000, update_timer_note)
+                else:
+                    notebook.tab(notebook.select(), text=f"{title} - Reminder!")
+                    # Added messagebox reminder
+                    messagebox.showinfo("Reminder", f"Time is up for \"{title}!\"")
+
+            update_timer_note()
+
+            # Destroy the note_frame after saving the note
+            note_frame.destroy()
 
     # Save-button
     save_button = ttk.Button(note_frame, text="Save", command=save_note, style="secondary.TButton")
     save_button.grid(row=3, column=1, padx=10, pady=10)
 
-#function to load existing notes
+# function to load existing notes
 def load_notes():
     try:
         with open("notes.json", "r") as f:
@@ -155,8 +173,8 @@ def load_notes():
         for title, content in notes.items():
             # Add the note to the notebook
             note_content = tk.Text(notebook, width=40, height=10)
-            note_content.insert(tk.END, content)
-            notebook.add(note_content, text=title)
+            note_content.insert(tk.END, content["content"])
+            notebook.add(note_content, text=f"{title}")
 
     except FileNotFoundError:
         # If the file does not exist, do nothing
